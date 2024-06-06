@@ -2,6 +2,8 @@ import express, { json } from "express";
 
 import { createEmployeeRouter } from "./routes/employees.js";
 import { EmployeeModel } from "./models/employee.js";
+import { createDepartmentRouter } from "./routes/departments.js";
+import { DepartmentModel } from "./models/departments.js";
 
 export const createApp = ({ dbClient }) => {
   const app = express();
@@ -9,9 +11,10 @@ export const createApp = ({ dbClient }) => {
   app.disable("x-powered-by");
 
   const employeeModel = new EmployeeModel(dbClient);
-  // const departmentModel = new DepartmentModel(dbClient);
+  const departmentModel = new DepartmentModel(dbClient);
 
   app.use("/employees", createEmployeeRouter({ employeeModel }));
+  app.use("/departments", createDepartmentRouter({ departmentModel }));
 
   const PORT = process.env.PORT ?? 3001;
 

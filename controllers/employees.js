@@ -1,3 +1,5 @@
+import { validateEmployee } from "../schemas/employees.js";
+
 export class EmployeeController {
   constructor({ employeeModel }) {
     this.employeeModel = employeeModel;
@@ -18,19 +20,38 @@ export class EmployeeController {
   };
 
   createEmployee = async (req, res) => {
-    // const result = validateMovie(req.body)
-    const result = req.body;
-    // console.log("body::", req);
-    // if (!result.success) {
-    // 422 Unprocessable Entity
-    // return res.status(400).json({ error: JSON.parse(result.error.message) })
-    // }
+    const result = validateEmployee(req.body);
+
+    if (!result.success) {
+      return res.status(403).json({ error: JSON.parse(result.error.message) });
+    }
 
     const newEmployee = await this.employeeModel.createEmployee({
-      ...result,
+      ...result.data,
     });
 
     res.status(201).json(newEmployee);
+  };
+
+  updateEmployee = async (req, res) => {
+    const result = validateEmployee(req.body);
+
+    if (!result.success) {
+      return res.status(403).json({ error: JSON.parse(result.error.message) });
+    }
+
+    const { id } = req.params;
+
+    const updatedMovie = await this.employeeModel.updateEmployee({
+      id,
+      input: result.data,
+    });
+
+    if (updatedMovie === false) {
+      return res.status(404).json({ message: "Employee not found" });
+    }
+
+    return res.json({ message: "Employee updated" });
   };
 
   deleteEmployeeById = async (req, res) => {

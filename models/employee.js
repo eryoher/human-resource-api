@@ -18,7 +18,21 @@ export class EmployeeModel {
   async getEmployeeById(id) {
     try {
       const employee = await this.db.execute({
-        sql: "SELECT * FROM employees WHERE id = ?",
+        sql: `SELECT
+                e.*,
+                d.name AS department_name,
+                d.id AS department_id
+              FROM
+                employees e
+                LEFT JOIN employee_history dh ON e.id = dh.employee_id
+                LEFT JOIN departments d ON dh.department_id = d.id
+              WHERE
+                e.id = ?
+                AND dh.end_date is null
+              ORDER BY
+                dh.start_date DESC
+              LIMIT
+                1;`,
         args: [id],
       });
 
@@ -57,14 +71,36 @@ export class EmployeeModel {
     }
   }
 
-  async updateEmployee(id, employeeData) {
+  async updateEmployee({ id, input: employeeData }) {
     try {
-      // Example query to update an existing employee
-      const result = await this.db.query(
-        "UPDATE employees SET ? WHERE id = ?",
-        [employeeData, id]
-      );
-      return result.rowsAffected > 0;
+      const currentEmployee = await this.getEmployeeById(id);
+      const { department_id: currentDepartmentId } = currentEmployee;
+      const { firstName, lastName, phone, address, departmentId } =
+        employeeData;
+      const today = format(new Date(), "yyyy-MM-dd");
+
+      // Update employee record
+      const { rowsAffected } = await this.db.execute({
+        sql: "UPDATE employees SET first_name = (:firstName), last_name = (:lastName), phone = (:phone), address = (:address) WHERE id = (:id)",
+        args: { firstName, lastName, phone, address, id },
+      });
+
+      if (rowsAffected > 0) {
+        if (currentDepartmentId !== departmentId) {
+          await this.db.execute({
+            sql: "UPDATE employee_history SET end_date = (:endDate) WHERE employee_id = (:id) AND end_date IS NULL",
+            args: { id, endDate: today },
+          });
+
+          // Insert new employee history record
+          await this.db.execute({
+            sql: "INSERT INTO employee_history (employee_id, department_id, start_date) VALUES (:id, :departmentId, :startDate)",
+            args: { id, departmentId, startDate: today },
+          });
+        }
+      }
+
+      return rowsAffected > 0;
     } catch (error) {
       throw new Error(`Failed to update employee with id ${id}`);
     }
