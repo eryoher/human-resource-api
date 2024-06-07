@@ -18,6 +18,7 @@ const employeeSchema = z.object({
       required_error: "Phone is required.",
     })
     .min(10, { message: "The phone is too short" }),
+  departmentId: z.number().int().positive(),
 });
 
 export function validateEmployee(input) {

@@ -8,7 +8,25 @@ export class EmployeeModel {
   async getAllEmployees() {
     try {
       // Example query to fetch all employees
-      const employees = await this.db.execute("SELECT * FROM employees");
+      const employees = await this.db.execute(`SELECT
+                e.*,
+                d.name AS department_name,
+                d.id AS department_id, 
+                oldest.start_date AS hire_date
+              FROM
+                employees e
+                LEFT JOIN employee_history eh ON e.id = eh.employee_id
+                LEFT JOIN departments d ON eh.department_id = d.id
+                LEFT JOIN (
+                  SELECT
+                    employee_id,
+                    MIN(start_date) AS start_date
+                  FROM
+                    employee_history
+                  GROUP BY
+                    employee_id
+                ) AS oldest ON e.id = oldest.employee_id
+              WHERE eh.end_date IS NULL;`);
       return employees.rows;
     } catch (error) {
       throw new Error("Failed to fetch employees");
@@ -21,16 +39,24 @@ export class EmployeeModel {
         sql: `SELECT
                 e.*,
                 d.name AS department_name,
-                d.id AS department_id
+                d.id AS department_id, 
+                oldest.start_date AS hire_date
               FROM
                 employees e
-                LEFT JOIN employee_history dh ON e.id = dh.employee_id
-                LEFT JOIN departments d ON dh.department_id = d.id
+                LEFT JOIN employee_history eh ON e.id = eh.employee_id
+                LEFT JOIN departments d ON eh.department_id = d.id
+                LEFT JOIN (
+                  SELECT
+                    employee_id,
+                    MIN(start_date) AS start_date
+                  FROM
+                    employee_history
+                  GROUP BY
+                    employee_id
+                ) AS oldest ON e.id = oldest.employee_id
               WHERE
                 e.id = ?
-                AND dh.end_date is null
-              ORDER BY
-                dh.start_date DESC
+                AND eh.end_date IS NULL
               LIMIT
                 1;`,
         args: [id],

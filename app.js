@@ -4,11 +4,13 @@ import { createEmployeeRouter } from "./routes/employees.js";
 import { EmployeeModel } from "./models/employee.js";
 import { createDepartmentRouter } from "./routes/departments.js";
 import { DepartmentModel } from "./models/departments.js";
+import { corsMiddleware } from "./middlewares/cors.js";
 
 export const createApp = ({ dbClient }) => {
   const app = express();
   app.use(json());
   app.disable("x-powered-by");
+  app.use(corsMiddleware());
 
   const employeeModel = new EmployeeModel(dbClient);
   const departmentModel = new DepartmentModel(dbClient);

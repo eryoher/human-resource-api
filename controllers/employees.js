@@ -1,4 +1,5 @@
 import { validateEmployee } from "../schemas/employees.js";
+import _ from "underscore";
 
 export class EmployeeController {
   constructor({ employeeModel }) {
@@ -13,7 +14,7 @@ export class EmployeeController {
   getEmployeeById = async (req, res) => {
     const { id } = req.params;
     const employee = await this.employeeModel.getEmployeeById(id);
-    if (employee) {
+    if (!_.isEmpty(employee)) {
       return res.json(employee);
     }
     res.status(404).json({ message: "Employee not found" });
@@ -35,7 +36,6 @@ export class EmployeeController {
 
   updateEmployee = async (req, res) => {
     const result = validateEmployee(req.body);
-
     if (!result.success) {
       return res.status(403).json({ error: JSON.parse(result.error.message) });
     }
