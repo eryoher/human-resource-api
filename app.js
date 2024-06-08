@@ -15,7 +15,10 @@ export const createApp = ({ dbClient }) => {
   const employeeModel = new EmployeeModel(dbClient);
   const departmentModel = new DepartmentModel(dbClient);
 
-  app.use("/employees", createEmployeeRouter({ employeeModel }));
+  app.use(
+    "/employees",
+    createEmployeeRouter({ employeeModel, departmentModel })
+  );
   app.use("/departments", createDepartmentRouter({ departmentModel }));
 
   const PORT = process.env.PORT ?? 3001;

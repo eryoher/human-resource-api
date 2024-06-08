@@ -2,8 +2,9 @@ import { validateEmployee } from "../schemas/employees.js";
 import _ from "underscore";
 
 export class EmployeeController {
-  constructor({ employeeModel }) {
+  constructor({ employeeModel, departmentModel }) {
     this.employeeModel = employeeModel;
+    this.departmentModel = departmentModel;
   }
 
   getAllEmployees = async (req, res) => {
@@ -15,7 +16,10 @@ export class EmployeeController {
     const { id } = req.params;
     const employee = await this.employeeModel.getEmployeeById(id);
     if (!_.isEmpty(employee)) {
-      return res.json(employee);
+      const departments =
+        await this.departmentModel.getAllDepartmentsByEmployee(id);
+
+      return res.json({ ...employee, history: departments });
     }
     res.status(404).json({ message: "Employee not found" });
   };

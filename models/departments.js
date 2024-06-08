@@ -12,6 +12,34 @@ export class DepartmentModel {
     }
   }
 
+  async getAllDepartmentsByEmployee(employeeId) {
+    try {
+      const departments = await this.db.execute({
+        sql: `SELECT 
+              eh.id,
+              eh.employee_id,
+              eh.start_date,
+              eh.end_date,
+              dept.id AS department_id,
+              dept.name AS department_name
+            FROM 
+              employee_history eh
+            JOIN 
+              departments dept 
+              ON eh.department_id = dept.id 
+            WHERE 
+              eh.employee_id = (:employeeId)
+            ORDER BY 
+              eh.start_date DESC;
+              ;`,
+        args: { employeeId },
+      });
+      return departments.rows;
+    } catch (error) {
+      throw new Error("Failed to fetch departments");
+    }
+  }
+
   async createDepartment(departmentData) {
     const { name } = departmentData;
 

@@ -62,7 +62,7 @@ export class EmployeeModel {
         args: [id],
       });
 
-      return employee.rows;
+      return employee.rows[0];
     } catch (error) {
       throw new Error(`Failed to fetch employee with id ${id}`);
     }
