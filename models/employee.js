@@ -37,28 +37,21 @@ export class EmployeeModel {
     try {
       const employee = await this.db.execute({
         sql: `SELECT
-                e.*,
-                d.name AS department_name,
-                d.id AS department_id, 
-                oldest.start_date AS hire_date
-              FROM
-                employees e
-                LEFT JOIN employee_history eh ON e.id = eh.employee_id
-                LEFT JOIN departments d ON eh.department_id = d.id
-                LEFT JOIN (
-                  SELECT
-                    employee_id,
-                    MIN(start_date) AS start_date
-                  FROM
-                    employee_history
-                  GROUP BY
-                    employee_id
-                ) AS oldest ON e.id = oldest.employee_id
-              WHERE
-                e.id = ?
-                AND eh.end_date IS NULL
-              LIMIT
-                1;`,
+              e.id,
+              e.first_name,
+              e.last_name,
+              e.phone,
+              e.address,
+              e.created_at AS hire_date,
+              e.active,
+              d.name AS department_name,
+              d.id AS department_id
+            FROM
+              employees e
+              LEFT JOIN employee_history eh ON e.id = eh.employee_id AND eh.end_date IS NULL
+              LEFT JOIN departments d ON eh.department_id = d.id
+            WHERE
+              e.id = ?;`,
         args: [id],
       });
 
@@ -69,12 +62,13 @@ export class EmployeeModel {
   }
 
   async createEmployee(employeeData) {
-    const today = format(new Date(), "yyyy-MM-dd");
     const { departmentId, ...data } = employeeData;
 
     try {
       const employee = await this.db.execute({
-        sql: "INSERT INTO employees (first_name, last_name, phone, address) VALUES (:firstName, :lastName, :phone, :address) RETURNING id",
+        sql: `INSERT INTO employees (first_name, last_name, phone, address, active, created_at) 
+          VALUES (:firstName, :lastName, :phone, :address, true, CURRENT_TIMESTAMP) 
+          RETURNING id`,
         args: { ...data },
       });
 
@@ -82,11 +76,11 @@ export class EmployeeModel {
 
       // Insert employee history record
       await this.db.execute({
-        sql: "INSERT INTO employee_history (employee_id, department_id, start_date) VALUES (:employeeId, :departmentId, :startDate)",
+        sql: `INSERT INTO employee_history (employee_id, department_id, start_date) 
+          VALUES (:employeeId, :departmentId, CURRENT_TIMESTAMP)`,
         args: {
           employeeId,
           departmentId: departmentId,
-          startDate: today,
         },
       });
 
@@ -101,27 +95,26 @@ export class EmployeeModel {
     try {
       const currentEmployee = await this.getEmployeeById(id);
       const { department_id: currentDepartmentId } = currentEmployee;
-      const { firstName, lastName, phone, address, departmentId } =
+      const { firstName, lastName, phone, address, departmentId, active } =
         employeeData;
-      const today = format(new Date(), "yyyy-MM-dd");
 
       // Update employee record
       const { rowsAffected } = await this.db.execute({
-        sql: "UPDATE employees SET first_name = (:firstName), last_name = (:lastName), phone = (:phone), address = (:address) WHERE id = (:id)",
-        args: { firstName, lastName, phone, address, id },
+        sql: "UPDATE employees SET first_name = (:firstName), last_name = (:lastName), phone = (:phone), address = (:address), active = (:active) WHERE id = (:id)",
+        args: { firstName, lastName, phone, address, active: active, id },
       });
 
       if (rowsAffected > 0) {
         if (currentDepartmentId !== departmentId) {
           await this.db.execute({
-            sql: "UPDATE employee_history SET end_date = (:endDate) WHERE employee_id = (:id) AND end_date IS NULL",
-            args: { id, endDate: today },
+            sql: "UPDATE employee_history SET end_date = CURRENT_TIMESTAMP WHERE employee_id = (:id) AND end_date IS NULL",
+            args: { id },
           });
 
           // Insert new employee history record
           await this.db.execute({
-            sql: "INSERT INTO employee_history (employee_id, department_id, start_date) VALUES (:id, :departmentId, :startDate)",
-            args: { id, departmentId, startDate: today },
+            sql: "INSERT INTO employee_history (employee_id, department_id, start_date) VALUES (:id, :departmentId, CURRENT_TIMESTAMP)",
+            args: { id, departmentId },
           });
         }
       }

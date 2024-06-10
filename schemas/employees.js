@@ -19,6 +19,7 @@ const employeeSchema = z.object({
     })
     .min(10, { message: "The phone is too short" }),
   departmentId: z.number().int().positive(),
+  active: z.boolean(),
 });
 
 export function validateEmployee(input) {
