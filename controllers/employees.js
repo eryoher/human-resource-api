@@ -25,7 +25,12 @@ export class EmployeeController {
   };
 
   createEmployee = async (req, res) => {
-    const result = validateEmployee(req.body);
+    const params = req.body;
+    const result = validateEmployee({
+      ...params,
+      departmentId: parseInt(params.departmentId),
+      active: params.active === "true",
+    });
 
     if (!result.success) {
       return res.status(403).json({ error: JSON.parse(result.error.message) });
@@ -33,6 +38,7 @@ export class EmployeeController {
 
     const newEmployee = await this.employeeModel.createEmployee({
       ...result.data,
+      avatar: req.file.path,
     });
 
     res.status(201).json(newEmployee);

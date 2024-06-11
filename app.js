@@ -5,13 +5,18 @@ import { EmployeeModel } from "./models/employee.js";
 import { createDepartmentRouter } from "./routes/departments.js";
 import { DepartmentModel } from "./models/departments.js";
 import { corsMiddleware } from "./middlewares/cors.js";
+import path from "path";
+import { fileURLToPath } from "url";
+import { dirname } from "path";
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
 
 export const createApp = ({ dbClient }) => {
   const app = express();
-  app.use(json());
   app.disable("x-powered-by");
   app.use(corsMiddleware());
-
+  app.use(json());
   const employeeModel = new EmployeeModel(dbClient);
   const departmentModel = new DepartmentModel(dbClient);
 
@@ -20,6 +25,8 @@ export const createApp = ({ dbClient }) => {
     createEmployeeRouter({ employeeModel, departmentModel })
   );
   app.use("/departments", createDepartmentRouter({ departmentModel }));
+
+  app.use("/uploads", express.static(path.join(__dirname, "uploads")));
 
   const PORT = process.env.PORT ?? 3001;
 

@@ -12,21 +12,14 @@ export class EmployeeModel {
                 e.*,
                 d.name AS department_name,
                 d.id AS department_id, 
-                oldest.start_date AS hire_date
+                e.created_at AS hire_date
               FROM
                 employees e
                 LEFT JOIN employee_history eh ON e.id = eh.employee_id
                 LEFT JOIN departments d ON eh.department_id = d.id
-                LEFT JOIN (
-                  SELECT
-                    employee_id,
-                    MIN(start_date) AS start_date
-                  FROM
-                    employee_history
-                  GROUP BY
-                    employee_id
-                ) AS oldest ON e.id = oldest.employee_id
-              WHERE eh.end_date IS NULL;`);
+              WHERE eh.end_date IS NULL
+              ORDER BY e.created_at DESC
+      ;`);
       return employees.rows;
     } catch (error) {
       throw new Error("Failed to fetch employees");
@@ -45,7 +38,8 @@ export class EmployeeModel {
               e.created_at AS hire_date,
               e.active,
               d.name AS department_name,
-              d.id AS department_id
+              d.id AS department_id,
+              e.avatar
             FROM
               employees e
               LEFT JOIN employee_history eh ON e.id = eh.employee_id AND eh.end_date IS NULL
@@ -57,6 +51,7 @@ export class EmployeeModel {
 
       return employee.rows[0];
     } catch (error) {
+      console.error(error);
       throw new Error(`Failed to fetch employee with id ${id}`);
     }
   }
@@ -66,8 +61,8 @@ export class EmployeeModel {
 
     try {
       const employee = await this.db.execute({
-        sql: `INSERT INTO employees (first_name, last_name, phone, address, active, created_at) 
-          VALUES (:firstName, :lastName, :phone, :address, true, CURRENT_TIMESTAMP) 
+        sql: `INSERT INTO employees (first_name, last_name, phone, address, avatar, active, created_at) 
+        VALUES (:firstName, :lastName, :phone, :address, :avatar, :active, CURRENT_TIMESTAMP) 
           RETURNING id`,
         args: { ...data },
       });
@@ -127,6 +122,8 @@ export class EmployeeModel {
 
   async deleteEmployeeById(id) {
     try {
+      // await this.db.execute({ sql: "BEGIN" });
+
       await this.db.execute({
         sql: "DELETE FROM employee_history WHERE employee_id = ?",
         args: [id],
@@ -137,8 +134,11 @@ export class EmployeeModel {
         args: [id],
       });
 
+      // await this.db.execute({ sql: "COMMIT" });
+
       return result.rowsAffected > 0;
     } catch (error) {
+      // await this.db.execute({ sql: "ROLLBACK" });
       throw new Error(`Failed to delete employee with id ${id}`);
     }
   }
