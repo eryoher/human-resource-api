@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { DepartmentController } from "../controllers/departments.js";
+import { DepartmentController } from "../controllers/DepartmentController.js";
 
 export const createDepartmentRouter = ({ departmentModel }) => {
   const departmentsRouter = Router();

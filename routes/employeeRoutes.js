@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { EmployeeController } from "../controllers/employees.js";
+import { EmployeeController } from "../controllers/EmployeeController.js";
 import upload from "../middlewares/upload.js";
 
 export const createEmployeeRouter = ({ employeeModel, departmentModel }) => {

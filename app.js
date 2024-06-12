@@ -1,13 +1,13 @@
 import express, { json } from "express";
 
-import { createEmployeeRouter } from "./routes/employees.js";
-import { EmployeeModel } from "./models/employee.js";
-import { createDepartmentRouter } from "./routes/departments.js";
-import { DepartmentModel } from "./models/departments.js";
+import { createEmployeeRouter } from "./routes/employeeRoutes.js";
+import { EmployeeModel } from "./models/Employee.js";
+import { DepartmentModel } from "./models/Department.js";
 import { corsMiddleware } from "./middlewares/cors.js";
 import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
+import { createDepartmentRouter } from "./routes/departmentRoutes.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
