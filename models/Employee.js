@@ -49,9 +49,14 @@ export class EmployeeModel {
         args: [id],
       });
 
-      return employee.rows[0];
+      const employeeData = employee.rows[0];
+      if (!employeeData) {
+        throw new Error(`Employee with id ${id} not found`);
+      }
+
+      return employeeData;
     } catch (error) {
-      console.error(error);
+      // console.error(error);
       throw new Error(`Failed to fetch employee with id ${id}`);
     }
   }
@@ -81,7 +86,6 @@ export class EmployeeModel {
 
       return employeeId;
     } catch (error) {
-      console.error(error);
       throw new Error("Failed to create employee");
     }
   }

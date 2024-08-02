@@ -1,5 +1,4 @@
 import express, { json } from "express";
-
 import { createEmployeeRouter } from "./routes/employeeRoutes.js";
 import { EmployeeModel } from "./models/Employee.js";
 import { DepartmentModel } from "./models/Department.js";
@@ -8,6 +7,8 @@ import path from "path";
 import { fileURLToPath } from "url";
 import { dirname } from "path";
 import { createDepartmentRouter } from "./routes/departmentRoutes.js";
+// import { graphqlHTTP } from "express-graphql";
+// import schema from "./graphql/schema.js";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
@@ -19,6 +20,14 @@ export const createApp = ({ dbClient }) => {
   app.use(json());
   const employeeModel = new EmployeeModel(dbClient);
   const departmentModel = new DepartmentModel(dbClient);
+
+  // app.use(
+  //   "/graphql",
+  //   graphqlHTTP({
+  //     schema: schema,
+  //     graphiql: true,
+  //   })
+  // );
 
   app.use(
     "/employees",

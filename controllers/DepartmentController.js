@@ -19,7 +19,7 @@ export class DepartmentController {
     const result = await this.departmentModel.deleteDepartmentById(id);
 
     if (result === false) {
-      return res.status(409).json({ message: "Department cannot be deleted" });
+      return res.status(404).json({ message: "Department not found" });
     }
     return res.json({ message: "Department deleted successfully" });
   };

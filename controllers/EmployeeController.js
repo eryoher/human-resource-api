@@ -38,7 +38,7 @@ export class EmployeeController {
 
     const newEmployee = await this.employeeModel.createEmployee({
       ...result.data,
-      avatar: req.file.path,
+      avatar: req?.file?.path ?? "",
     });
 
     res.status(201).json(newEmployee);
